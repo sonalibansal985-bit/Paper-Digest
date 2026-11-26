@@ -16,9 +16,37 @@ class FlaskApiTests(unittest.TestCase):
         self.client = app.test_client()
 
     def test_info_endpoints(self):
-        self.assertEqual(self.client.get("/").get_json()["status"], "running")
+        self.assertEqual(self.client.get("/api").get_json()["status"], "running")
         self.assertEqual(self.client.get("/health").get_json()["status"], "healthy")
         self.assertIn("success", self.client.get("/api/test").get_json())
+
+    def test_frontend_is_served_from_root(self):
+        index = self.client.get("/")
+        self.assertEqual(index.status_code, 200)
+        self.assertIn("text/html", index.content_type)
+        self.assertIn(b"PaperDigest", index.data)
+        self.assertIn(b"js/app.js", index.data)
+        index.close()
+
+        alias = self.client.get("/index.html")
+        self.assertEqual(alias.status_code, 200)
+        alias.close()
+
+        reader = self.client.get("/reader.html")
+        self.assertEqual(reader.status_code, 200)
+        self.assertIn(b"Research Reader", reader.data)
+        reader.close()
+
+    def test_only_public_js_assets_are_served(self):
+        script = self.client.get("/js/app.js")
+        self.assertEqual(script.status_code, 200)
+        self.assertIn("javascript", script.content_type)
+        script.close()
+        # Secrets and backend source must not be reachable over HTTP.
+        for private in ("/.env", "/backend/app/ai.py", "/README.md"):
+            response = self.client.get(private)
+            self.assertEqual(response.status_code, 404)
+            response.close()
 
     def test_empty_question_is_rejected(self):
         response = self.client.post("/api/ask", json={"question": "   "})

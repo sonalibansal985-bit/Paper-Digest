@@ -4,19 +4,19 @@ An AI-powered research reading platform. The feed contains **60 randomly sampled
 
 ## Run it
 
-Two servers are needed: the API (paper feed + AI) and the static frontend.
+One Flask server serves **both the frontend and the API**, so deployment needs a single site.
 
 ```bash
-# 1. API (Flask) — uses the .venv in this repo
 cp .env.example .env          # then put your real GEMINI_API_KEY in .env
 source .venv/bin/activate
 flask --app backend.app.main run --port 8000
-
-# 2. Frontend — in a second terminal, from the project root
-python3 -m http.server 5500
 ```
 
-Open **http://localhost:5500**. The ES modules require HTTP (opening `index.html` via `file://` will not work).
+Open **http://localhost:8000** — `/` is the feed, `/reader.html` is the AI reader, `/js/*` are the modules, and `/api/*` is the JSON API. ES modules require HTTP; opening `index.html` via `file://` will not work.
+
+For local frontend-only work you can still run `python3 -m http.server 5500`; the browser client detects that port and calls the API at `127.0.0.1:8000`.
+
+To deploy, set `GEMINI_API_KEY` in the host environment and serve the `backend.app.main:app` WSGI app, for example `gunicorn 'backend.app.main:app'`. No second static host is needed.
 
 Without a Gemini key the feed still works; only the AI reader returns a configuration error. If the API is not running, the feed automatically falls back to the committed arXiv snapshot (`js/data/snapshot.js`).
 

@@ -1,7 +1,13 @@
 // Browser-side API client. All paper and AI data comes from our own backend,
 // which proxies arXiv (the arXiv API does not allow direct browser requests).
 
-export const API_BASE = "http://127.0.0.1:8000";
+// Same-origin in production (Flask serves both the frontend and the API).
+// Only the old two-server dev setup needs an explicit backend URL.
+const port = typeof location === "undefined" ? "" : location.port;
+const host = typeof location === "undefined" ? "" : location.hostname;
+const TWO_SERVER_DEV = ["5500", "8001"].includes(port)
+  && ["localhost", "127.0.0.1"].includes(host);
+export const API_BASE = TWO_SERVER_DEV ? "http://127.0.0.1:8000" : "";
 
 async function request(path, options = {}) {
   const controller = new AbortController();
