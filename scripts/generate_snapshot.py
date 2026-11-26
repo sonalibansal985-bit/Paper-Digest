@@ -1,10 +1,14 @@
-"""Regenerate the offline paper snapshot from the arXiv q-fin.CP feed.
+"""Regenerate a 60-paper snapshot from the arXiv computational feed.
 
-Usage: python3 scripts/generate_snapshot.py
+The frontend is a separate repo, so this writes a JS module at the backend repo
+root that can be copied to the frontend as `js/data/snapshot.js`.
+
+Usage: python3 scripts/generate_snapshot.py [--output path/to/snapshot.js]
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from datetime import datetime, timezone
@@ -17,8 +21,12 @@ from backend.app.arxiv import SOURCE_URL, fetch_papers  # noqa: E402
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", default=str(ROOT / "snapshot.js"))
+    args = parser.parse_args()
+
     papers = fetch_papers(count=60, force=True)
-    output = ROOT / "public" / "js" / "data" / "snapshot.js"
+    output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "generatedAt": datetime.now(timezone.utc).isoformat(),

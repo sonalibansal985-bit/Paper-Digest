@@ -1,6 +1,6 @@
-"""Vercel entrypoint: exposes the Flask app for WSGI hosting.
+"""Vercel entrypoint: exposes the backend-only Flask app for WSGI hosting.
 
-Local development still uses: flask --app backend.app.main run --port 8000
+Local development: flask --app backend.app.main run --port 8000
 """
 
 from backend.app.main import app

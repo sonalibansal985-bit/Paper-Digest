@@ -1,4 +1,4 @@
-"""Flask API smoke tests using Flask's built-in test client."""
+"""Flask backend API tests using Flask's built-in test client."""
 
 import sys
 import unittest
@@ -16,37 +16,15 @@ class FlaskApiTests(unittest.TestCase):
         self.client = app.test_client()
 
     def test_info_endpoints(self):
+        self.assertEqual(self.client.get("/").get_json()["status"], "running")
         self.assertEqual(self.client.get("/api").get_json()["status"], "running")
         self.assertEqual(self.client.get("/health").get_json()["status"], "healthy")
         self.assertIn("success", self.client.get("/api/test").get_json())
 
-    def test_frontend_is_served_from_root(self):
-        index = self.client.get("/")
-        self.assertEqual(index.status_code, 200)
-        self.assertIn("text/html", index.content_type)
-        self.assertIn(b"PaperDigest", index.data)
-        self.assertIn(b"js/app.js", index.data)
-        index.close()
-
-        alias = self.client.get("/index.html")
-        self.assertEqual(alias.status_code, 200)
-        alias.close()
-
-        reader = self.client.get("/reader.html")
-        self.assertEqual(reader.status_code, 200)
-        self.assertIn(b"Research Reader", reader.data)
-        reader.close()
-
-    def test_only_public_js_assets_are_served(self):
-        script = self.client.get("/js/app.js")
-        self.assertEqual(script.status_code, 200)
-        self.assertIn("javascript", script.content_type)
-        script.close()
-        # Secrets and backend source must not be reachable over HTTP.
-        for private in ("/.env", "/backend/app/ai.py", "/README.md"):
-            response = self.client.get(private)
-            self.assertEqual(response.status_code, 404)
-            response.close()
+    def test_backend_does_not_serve_frontend_files(self):
+        # Frontend is a separate static repo; this service is API-only.
+        for path in ("/index.html", "/reader.html", "/js/app.js"):
+            self.assertEqual(self.client.get(path).status_code, 404)
 
     def test_empty_question_is_rejected(self):
         response = self.client.post("/api/ask", json={"question": "   "})
@@ -61,19 +39,30 @@ class FlaskApiTests(unittest.TestCase):
         self.assertEqual(response.get_json()["count"], 1)
         fetch.assert_called_once_with(count=5, seed="demo", force=False)
 
-    def test_cors_preflight(self):
+    def test_cors_allows_the_static_frontend_origin(self):
         response = self.client.options(
             "/api/ask",
             headers={
-                "Origin": "http://127.0.0.1:5500",
+                "Origin": "https://paper-digest-frontend.vercel.app",
                 "Access-Control-Request-Method": "POST",
             },
         )
         self.assertEqual(response.status_code, 204)
-        self.assertEqual(
-            response.headers["Access-Control-Allow-Origin"],
-            "http://127.0.0.1:5500",
+        self.assertEqual(response.headers["Access-Control-Allow-Origin"], "*")
+        self.assertIn("POST", response.headers["Access-Control-Allow-Methods"])
+
+    @patch.dict("os.environ", {"ALLOWED_ORIGINS": "https://frontend.example"})
+    def test_cors_can_be_restricted_by_environment(self):
+        allowed = self.client.get(
+            "/health", headers={"Origin": "https://frontend.example"}
         )
+        blocked = self.client.get(
+            "/health", headers={"Origin": "https://other.example"}
+        )
+        self.assertEqual(
+            allowed.headers["Access-Control-Allow-Origin"], "https://frontend.example"
+        )
+        self.assertNotIn("Access-Control-Allow-Origin", blocked.headers)
 
 
 if __name__ == "__main__":

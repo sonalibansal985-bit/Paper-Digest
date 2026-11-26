@@ -1,4 +1,8 @@
-"""PaperDigest API (Flask): arXiv computational feed proxy + Gemini AI reader."""
+"""PaperDigest API (Flask): arXiv computational feed proxy + Gemini AI reader.
+
+This repository is the backend only. The static frontend is a separate repo and
+calls this API cross-origin via its configured API base URL.
+"""
 
 from __future__ import annotations
 
@@ -6,26 +10,14 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from flask import Flask, abort, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request
 
 from . import ai, arxiv
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
-# Frontend lives in public/ so Vercel can serve it as static assets while
-# Flask serves the API from the same site.
-FRONTEND_DIR = ROOT_DIR / "public"
 load_dotenv(ROOT_DIR / ".env")
 
 app = Flask(__name__, static_folder=None)
-
-ALLOWED_ORIGINS = [
-    "http://localhost:5500",
-    "http://127.0.0.1:5500",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "http://localhost:8001",
-    "http://127.0.0.1:8001",
-]
 
 
 class APIError(Exception):
@@ -46,15 +38,23 @@ def handle_preflight():
         return "", 204
 
 
+def configured_origins() -> list[str] | None:
+    raw = os.getenv("ALLOWED_ORIGINS", "")
+    origins = [item.strip() for item in raw.split(",") if item.strip()]
+    return origins or None
+
+
 @app.after_request
 def add_cors_headers(response):
-    origin = request.headers.get("Origin")
-    if origin in ALLOWED_ORIGINS:
+    origins = configured_origins()
+    origin = request.headers.get("Origin", "")
+    if origins is None:
+        response.headers["Access-Control-Allow-Origin"] = "*"
+    elif origin in origins:
         response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
         response.headers["Vary"] = "Origin"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
     return response
 
 
@@ -84,40 +84,21 @@ def answer(prompt: str) -> str:
         raise APIError(f"AI request failed: {exc}", 502) from exc
 
 
-# ---------- frontend (single-site deployment) ----------
-
-
-@app.get("/")
-@app.get("/index.html")
-def frontend_index():
-    return send_from_directory(FRONTEND_DIR, "index.html")
-
-
-@app.get("/reader.html")
-def frontend_reader():
-    return send_from_directory(FRONTEND_DIR, "reader.html")
-
-
-@app.get("/<path:filepath>")
-def frontend_asset(filepath: str):
-    # Only browser assets are public; .env, backend code and tests are not.
-    if not filepath.startswith("js/"):
-        abort(404)
-    return send_from_directory(FRONTEND_DIR, filepath)
-
-
-# ---------- API ----------
-
-
-@app.get("/api")
-def home():
+def api_info():
     return jsonify(
         {
             "message": "Welcome to PaperDigest API!",
             "status": "running",
             "paper_source": "arXiv computational research",
+            "frontend": "https://github.com/sonalibansal985-bit/Paper-Digest-Frontend",
         }
     )
+
+
+@app.get("/")
+@app.get("/api")
+def home():
+    return api_info()
 
 
 @app.get("/health")
@@ -188,6 +169,4 @@ def ask():
     if not isinstance(question, str) or not question.strip():
         raise APIError("Question cannot be empty", 400)
     paper, context = paper_from_body(data)
-    return jsonify(
-        {"answer": answer(ai.build_ask_prompt(paper, question, context))}
-    )
+    return jsonify({"answer": answer(ai.build_ask_prompt(paper, question, context))})
