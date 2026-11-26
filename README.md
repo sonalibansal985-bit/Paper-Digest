@@ -18,6 +18,10 @@ For local frontend-only work you can still run `python3 -m http.server 5500`; th
 
 To deploy, set `GEMINI_API_KEY` in the host environment and serve the `backend.app.main:app` WSGI app, for example `gunicorn 'backend.app.main:app'`. No second static host is needed.
 
+### Vercel
+
+The repo includes a root `app.py` (exporting `app`) and root `requirements.txt`, which are Vercel's recognised Flask entrypoint and dependency manifest. Deploy from Git with those files present; Vercel routes all paths to Flask, which serves `/`, `/reader.html`, `/js/*` and `/api/*` from the same site. Set `GEMINI_API_KEY` in **Project Settings → Environment Variables**; without it the feed still works but the AI reader returns a configuration error. If an older deployment was created as a static-only project, redeploy after these files are pushed so Vercel re-detects the Flask framework.
+
 Without a Gemini key the feed still works; only the AI reader returns a configuration error. If the API is not running, the feed automatically falls back to the committed arXiv snapshot (`js/data/snapshot.js`).
 
 Refresh the snapshot with:
