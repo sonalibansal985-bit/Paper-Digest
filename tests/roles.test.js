@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { can, normaliseRole, ROLE_NAMES } from "../js/core/roles.js";
+import { can, normaliseRole, ROLE_NAMES } from "../public/js/core/roles.js";
 
 test("all three roles are defined", () => {
   assert.deepEqual(ROLE_NAMES, ["Student", "Faculty", "Club Editor"]);

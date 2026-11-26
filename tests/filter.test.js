@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { collectCategories, filterPapers, searchableText } from "../js/core/filter.js";
+import { collectCategories, filterPapers, searchableText } from "../public/js/core/filter.js";
 
 const papers = [
   {

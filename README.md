@@ -12,17 +12,17 @@ source .venv/bin/activate
 flask --app backend.app.main run --port 8000
 ```
 
-Open **http://localhost:8000** — `/` is the feed, `/reader.html` is the AI reader, `/js/*` are the modules, and `/api/*` is the JSON API. ES modules require HTTP; opening `index.html` via `file://` will not work.
+Open **http://localhost:8000** — `/` is the feed, `/reader.html` is the AI reader, `/js/*` are the modules, and `/api/*` is the JSON API. Frontend files live in `public/`; ES modules require HTTP, so opening `index.html` via `file://` will not work.
 
-For local frontend-only work you can still run `python3 -m http.server 5500`; the browser client detects that port and calls the API at `127.0.0.1:8000`.
+For local frontend-only work you can still run `python3 -m http.server 5500 --directory public`; the browser client detects that port and calls the API at `127.0.0.1:8000`.
 
 To deploy, set `GEMINI_API_KEY` in the host environment and serve the `backend.app.main:app` WSGI app, for example `gunicorn 'backend.app.main:app'`. No second static host is needed.
 
 ### Vercel
 
-The repo includes a root `app.py` (exporting `app`) and root `requirements.txt`, which are Vercel's recognised Flask entrypoint and dependency manifest. Deploy from Git with those files present; Vercel routes all paths to Flask, which serves `/`, `/reader.html`, `/js/*` and `/api/*` from the same site. Set `GEMINI_API_KEY` in **Project Settings → Environment Variables**; without it the feed still works but the AI reader returns a configuration error. If an older deployment was created as a static-only project, redeploy after these files are pushed so Vercel re-detects the Flask framework.
+The repo includes a root `app.py` (exporting `app`) and root `requirements.txt` — Vercel's recognised Flask entrypoint and dependency manifest. Frontend files are in `public/`, which Vercel serves as static assets (`/`, `/reader.html`, `/js/*`); `/api/*` is routed to the Flask function. Set `GEMINI_API_KEY` in **Project Settings → Environment Variables**; without it the feed still works but the AI reader returns a configuration error. If an older deployment was created as a static-only project, redeploy after these files are pushed so Vercel re-detects the Flask framework.
 
-Without a Gemini key the feed still works; only the AI reader returns a configuration error. If the API is not running, the feed automatically falls back to the committed arXiv snapshot (`js/data/snapshot.js`).
+Without a Gemini key the feed still works; only the AI reader returns a configuration error. If the API is not running, the feed automatically falls back to the committed arXiv snapshot (`public/js/data/snapshot.js`).
 
 Refresh the snapshot with:
 
@@ -37,13 +37,13 @@ python3 scripts/generate_snapshot.py
 | arXiv proxy + cache | `backend/app/arxiv.py` | Fetches a pool of 300 recent computational papers from the Atom API, randomly samples 60 (reproducible per day), caches 15 minutes |
 | AI prompts + Gemini | `backend/app/ai.py` | Pure prompt builders/parsers plus the Gemini client |
 | API endpoints | `backend/app/main.py` | `/api/papers?count=60&seed=...`, `/api/summarize`, `/api/questions`, `/api/ask`, `/api/notes` |
-| Paper loading | `js/core/papers.js` | Live feed with offline snapshot fallback |
-| Filter / score / sort | `js/core/filter.js`, `scoring.js`, `sort.js` | Pure, testable ranking logic |
-| Roles | `js/core/roles.js` | Capability map enforced in UI and in mutations |
-| Storage | `js/core/storage.js` | Defensive LocalStorage wrapper |
-| API client | `js/core/api.js` | Browser-side calls to the backend |
-| Feed page | `js/app.js`, `index.html` | Feed, filters, reading list, shared lists, digest |
-| Reader page | `js/reader.js`, `reader.html` | Real PDF iframe, AI summary/questions/chat/notes |
+| Paper loading | `public/js/core/papers.js` | Live feed with offline snapshot fallback |
+| Filter / score / sort | `public/js/core/filter.js`, `scoring.js`, `sort.js` | Pure, testable ranking logic |
+| Roles | `public/js/core/roles.js` | Capability map enforced in UI and in mutations |
+| Storage | `public/js/core/storage.js` | Defensive LocalStorage wrapper |
+| API client | `public/js/core/api.js` | Browser-side calls to the backend |
+| Feed page | `public/js/app.js`, `public/index.html` | Feed, filters, reading list, shared lists, digest |
+| Reader page | `public/js/reader.js`, `public/reader.html` | Real PDF iframe, AI summary/questions/chat/notes |
 
 ## Roles
 

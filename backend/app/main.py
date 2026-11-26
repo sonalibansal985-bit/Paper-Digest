@@ -11,10 +11,11 @@ from flask import Flask, abort, jsonify, request, send_from_directory
 from . import ai, arxiv
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
+# Frontend lives in public/ so Vercel can serve it as static assets while
+# Flask serves the API from the same site.
+FRONTEND_DIR = ROOT_DIR / "public"
 load_dotenv(ROOT_DIR / ".env")
 
-# The same Flask process serves both the API and the frontend, so a single
-# deployment URL is all that is needed.
 app = Flask(__name__, static_folder=None)
 
 ALLOWED_ORIGINS = [
@@ -89,12 +90,12 @@ def answer(prompt: str) -> str:
 @app.get("/")
 @app.get("/index.html")
 def frontend_index():
-    return send_from_directory(ROOT_DIR, "index.html")
+    return send_from_directory(FRONTEND_DIR, "index.html")
 
 
 @app.get("/reader.html")
 def frontend_reader():
-    return send_from_directory(ROOT_DIR, "reader.html")
+    return send_from_directory(FRONTEND_DIR, "reader.html")
 
 
 @app.get("/<path:filepath>")
@@ -102,7 +103,7 @@ def frontend_asset(filepath: str):
     # Only browser assets are public; .env, backend code and tests are not.
     if not filepath.startswith("js/"):
         abort(404)
-    return send_from_directory(ROOT_DIR, filepath)
+    return send_from_directory(FRONTEND_DIR, filepath)
 
 
 # ---------- API ----------

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readJSON, readText, writeJSON, writeText } from "../js/core/storage.js";
+import { readJSON, readText, writeJSON, writeText } from "../public/js/core/storage.js";
 
 function fakeStorage() {
   const data = new Map();

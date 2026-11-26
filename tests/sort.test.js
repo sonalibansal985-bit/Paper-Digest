@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { sortPapers } from "../js/core/sort.js";
+import { sortPapers } from "../public/js/core/sort.js";
 
 const papers = [
   { id: "a", title: "Alpha", score: 3, published: "2026-11-20T00:00:00Z" },

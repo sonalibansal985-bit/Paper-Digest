@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { scorePaper } from "../js/core/scoring.js";
+import { scorePaper } from "../public/js/core/scoring.js";
 
 const now = new Date("2026-11-26T12:00:00Z");
 const paper = {

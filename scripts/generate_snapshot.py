@@ -18,7 +18,7 @@ from backend.app.arxiv import SOURCE_URL, fetch_papers  # noqa: E402
 
 def main() -> None:
     papers = fetch_papers(count=60, force=True)
-    output = ROOT / "js" / "data" / "snapshot.js"
+    output = ROOT / "public" / "js" / "data" / "snapshot.js"
     output.parent.mkdir(parents=True, exist_ok=True)
     payload = {
         "generatedAt": datetime.now(timezone.utc).isoformat(),

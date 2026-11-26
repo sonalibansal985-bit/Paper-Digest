@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { escapeHTML, paperCardHTML, readingListHTML } from "../js/ui/render.js";
+import { escapeHTML, paperCardHTML, readingListHTML } from "../public/js/ui/render.js";
 
 test("escapeHTML prevents attribute and markup injection", () => {
   assert.equal(escapeHTML(`<a href="x">&'`), "&lt;a href=&quot;x&quot;&gt;&amp;&#39;");
