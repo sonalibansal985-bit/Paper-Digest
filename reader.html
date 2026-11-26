@@ -1,502 +1,93 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>PaperDigest | Research Reader</title>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <style>
-        body {
-            background: #f4f7fb;
-            font-family: Arial, sans-serif;
-            margin: 0;
-        }
-
-        .navbar {
-            background: #ffffff;
-            border-bottom: 1px solid #e5eaf1;
-            padding: 15px 25px;
-        }
-
-        .reader-container {
-            display: flex;
-            gap: 20px;
-            padding: 20px;
-            height: calc(100vh - 70px);
-        }
-
-        .pdf-panel,
-        .ai-panel {
-            background: white;
-            border: 1px solid #e5eaf1;
-            border-radius: 12px;
-            padding: 20px;
-        }
-
-        .pdf-panel {
-            flex: 1;
-        }
-
-        .ai-panel {
-            width: 380px;
-        }
-        .ai-panel.collapsed {
-        display: none;
-        }
-
-        .pdf-panel {
-        flex: 1;
-        transition: all 0.3s ease;
-        }
-
-        .pdf-placeholder {
-            background: #f1f4f9;
-            border-radius: 10px;
-            height: 85%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #718096;
-        }
-
-        .ai-chat {
-    background: #f7f9fc;
-    border-radius: 10px;
-    padding: 15px;
-    height: 70%;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-}
-        
-        #askAIButton {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            z-index: 1000;
-            display: none;
-            border-radius: 25px;
-            padding: 12px 22px;
-        }
-        .user-message {
-    align-self: flex-end;
-    background: #2563eb;
-    color: white;
-    padding: 10px 14px;
-    border-radius: 12px 12px 2px 12px;
-    max-width: 85%;
-    margin-bottom: 12px;
-}
-
-.ai-message {
-    align-self: flex-start;
-    background: white;
-    color: #263449;
-    border: 1px solid #e5eaf1;
-    padding: 10px 14px;
-    border-radius: 12px 12px 12px 2px;
-    max-width: 85%;
-    margin-bottom: 12px;
-}
-.pdf-viewer {
-    width: 100%;
-    height: 85%;
-    border: 1px solid #e5eaf1;
-    border-radius: 10px;
-    margin-top: 15px;
-}
-.research-notes {
-    background: white;
-    border: 1px solid #e5eaf1;
-    border-radius: 12px;
-    padding: 20px;
-    margin: 20px;
-}
-
-.research-notes textarea {
-    resize: vertical;
-}
-
-.saved-note {
-    background: #f7f9fc;
-    border: 1px solid #e5eaf1;
-    border-radius: 10px;
-    padding: 15px;
-    margin-top: 12px;
-    white-space: pre-wrap;
-}
+        body { background: #f4f7fb; font-family: Arial, sans-serif; margin: 0; }
+        .navbar { background: #fff; border-bottom: 1px solid #e5eaf1; padding: 12px 25px; }
+        .reader-container { display: flex; flex-wrap: wrap; gap: 20px; padding: 20px; }
+        .pdf-panel, .ai-panel, .research-notes { background: #fff; border: 1px solid #e5eaf1; border-radius: 12px; padding: 20px; }
+        .pdf-panel { flex: 1 1 500px; min-width: 320px; }
+        .ai-panel { flex: 0 0 380px; width: 380px; }
+        .ai-panel.collapsed { display: none; }
+        .research-notes { flex: 1 1 100%; }
+        @media (max-width: 991px) { .ai-panel { flex: 1 1 100%; width: 100%; } }
+        .pdf-viewer { width: 100%; height: 72vh; min-height: 480px; border: 1px solid #e5eaf1; border-radius: 10px; margin-top: 15px; }
+        .ai-chat { background: #f7f9fc; border-radius: 10px; padding: 15px; height: 320px; overflow-y: auto; display: flex; flex-direction: column; }
+        .ai-summary { background: #f7f9fc; border-radius: 10px; padding: 12px; max-height: 260px; overflow-y: auto; white-space: pre-wrap; font-size: .9rem; }
+        .user-message { align-self: flex-end; background: #2563eb; color: #fff; padding: 10px 14px; border-radius: 12px 12px 2px 12px; max-width: 85%; margin-bottom: 12px; white-space: pre-wrap; }
+        .ai-message { align-self: flex-start; background: #fff; border: 1px solid #e5eaf1; padding: 10px 14px; border-radius: 12px 12px 12px 2px; max-width: 85%; margin-bottom: 12px; white-space: pre-wrap; }
+        .question-chip { cursor: pointer; }
+        #askAIButton { position: fixed; bottom: 25px; right: 25px; z-index: 1000; display: none; border-radius: 25px; }
+        .research-notes textarea { resize: vertical; }
+        .saved-note { background: #f7f9fc; border: 1px solid #e5eaf1; border-radius: 10px; padding: 12px; margin-top: 12px; white-space: pre-wrap; }
+        .section-label { font-size: .76rem; text-transform: uppercase; letter-spacing: .08em; color: #8791a5; font-weight: 700; }
     </style>
 </head>
 
 <body>
-
-    <nav class="navbar">
-        <strong>PaperDigest</strong>
-        <span class="ms-3 text-secondary">Research Reader</span>
+    <nav class="navbar d-flex justify-content-between align-items-center">
+        <div><strong>PaperDigest</strong><span class="ms-3 text-secondary">Research Reader</span></div>
+        <a href="index.html" class="btn btn-sm btn-outline-secondary">← Back to feed</a>
     </nav>
 
     <main class="reader-container">
-
         <section class="pdf-panel">
-            <h5 id="paperTitle">Research Paper</h5>
-
-<p id="paperInfo" class="text-secondary small">
-    Select a paper to begin reading.
-</p>
-
-            <iframe
-    id="pdfViewer"
-    src="test-paper.pdf"
-    class="pdf-viewer"
-    title="Research paper PDF">
-</iframe>
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                <h5 id="paperTitle" class="mb-0">Research Paper</h5>
+                <a id="openPdf" class="btn btn-sm btn-outline-primary" href="#" target="_blank" rel="noopener noreferrer">Open PDF in new tab</a>
+            </div>
+            <p id="paperInfo" class="text-secondary small mt-2">Select a paper to begin reading.</p>
+            <iframe id="pdfViewer" class="pdf-viewer" title="Research paper PDF"></iframe>
+            <div id="pdfFallback" class="empty d-none">No PDF is available for this paper. Use the arXiv abstract link instead.</div>
         </section>
 
         <section class="ai-panel" id="aiPanel">
-
-    <div class="d-flex justify-content-between align-items-center mb-3">
-
-        <h5 class="mb-0">AI Research Companion</h5>
-
-        <button
-            class="btn btn-sm btn-outline-secondary"
-            onclick="collapseAI()">
-            <i class="bi bi-layout-sidebar-reverse"></i>
-            Collapse
-        </button>
-
-    </div>
-            <p class="text-secondary small">
-                Your personal research assistant
-            </p>
-
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">AI Research Companion</h5>
+                <button id="collapseAI" class="btn btn-sm btn-outline-secondary">Collapse</button>
+            </div>
+            <div class="section-label mb-2">Paper summary</div>
+            <div id="summaryBox" class="ai-summary"><span class="text-secondary">Generating summary…</span></div>
+            <div class="section-label mt-3 mb-2">Suggested questions</div>
+            <div id="questionChips" class="d-flex flex-wrap gap-2 mb-3"></div>
+            <div class="section-label mb-2">Chat</div>
             <div class="ai-chat" id="chatMessages">
-    <p class="text-secondary">
-        Ask me anything about this research paper.
-    </p>
-</div>
-
-<div class="mt-3 d-flex gap-2">
-
-    <input
-        type="text"
-        id="chatInput"
-        class="form-control"
-        placeholder="Ask about this paper..."
-    >
-
-    <button class="btn btn-primary" id="sendButton">
-        Send
-    </button>
-
-</div>
+                <p class="text-secondary small mb-0">Ask a question, or click a suggested question above.</p>
+            </div>
+            <div class="mt-3 d-flex gap-2">
+                <input type="text" id="chatInput" class="form-control" placeholder="Ask about this paper...">
+                <button class="btn btn-primary" id="sendButton">Send</button>
+            </div>
+            <button id="generateNotesButton" class="btn btn-sm btn-outline-primary mt-3 w-100">Generate AI notes</button>
+            <div id="aiStatus" class="small muted mt-2"></div>
         </section>
-        <button
-            id="askAIButton"
-            class="btn btn-primary"
-            onclick="expandAI()">
-            Ask AI
-        </button>
-<section class="research-notes">
-    <h5>Research Notes</h5>
-    <p class="text-secondary small">
-        Save important explanations and findings from your research.
-    </p>
 
-    <textarea
-        id="noteInput"
-        class="form-control"
-        rows="4"
-        maxlength="500"
-        placeholder="Write your research notes here..."
-    ></textarea>
-    
-    <small class="text-secondary">
-    <span id="charCount">0</span>/500 characters
-</small>
+        <button id="askAIButton" class="btn btn-primary" onclick="document.getElementById('aiPanel').classList.remove('collapsed'); this.style.display='none'">Ask AI</button>
 
-    <button class="btn btn-primary mt-3" id="saveNoteButton">
-        Save Note
-    </button>
-    <button class="btn btn-outline-danger mt-3 ms-2" id="clearNotesButton">
-    Clear All Notes
-</button>
-    <div class="mt-3">
-    <select id="noteFilter" class="form-select">
-        <option value="all">All Notes</option>
-        <option value="manual">Manual Notes</option>
-        <option value="ai">AI-Generated Notes</option>
-    </select>
-</div>
-
-    <div id="savedNotes" class="mt-4"></div>
-</section>
+        <section class="research-notes">
+            <h5>Research Notes</h5>
+            <p class="text-secondary small">Save explanations and findings. AI-generated notes are labelled automatically.</p>
+            <textarea id="noteInput" class="form-control" rows="4" maxlength="500" placeholder="Write your research notes here..."></textarea>
+            <div class="d-flex justify-content-between align-items-center mt-1">
+                <small class="text-secondary"><span id="charCount">0</span>/500 characters</small>
+            </div>
+            <button class="btn btn-primary mt-3" id="saveNoteButton">Save Note</button>
+            <button class="btn btn-outline-danger mt-3 ms-2" id="clearNotesButton">Clear All Notes</button>
+            <select id="noteFilter" class="form-select mt-3" style="max-width: 240px;">
+                <option value="all">All Notes</option>
+                <option value="manual">Manual Notes</option>
+                <option value="ai">AI-Generated Notes</option>
+            </select>
+            <div id="savedNotes" class="mt-3"></div>
+        </section>
     </main>
-    <script>
-                const currentPaper = JSON.parse(
-    localStorage.getItem("paperdigest-current-paper") || "null"
-);
 
-if (currentPaper) {
-
-    document.getElementById("paperTitle").textContent =
-        currentPaper.title;
-
-    document.getElementById("paperInfo").textContent =
-        `${currentPaper.authors} · ${currentPaper.source} · ${currentPaper.date}`;
-
-}
-const pdfViewer = document.getElementById("pdfViewer");
-
-if (currentPaper && currentPaper.pdfUrl) {
-    pdfViewer.src = currentPaper.pdfUrl;
-} else {
-    pdfViewer.src = "test-paper.pdf";
-}
-    function collapseAI() {
-
-        document.getElementById("aiPanel").classList.add("collapsed");
-
-        document.getElementById("askAIButton").style.display = "block";
-
-    }
-
-    function expandAI() {
-
-        document.getElementById("aiPanel").classList.remove("collapsed");
-
-        document.getElementById("askAIButton").style.display = "none";
-
-    }
-    const chatInput = document.getElementById("chatInput");
-const chatMessages = document.getElementById("chatMessages");
-const sendButton = document.getElementById("sendButton");
-
-
-async function sendMessage() {
-
-    const message = chatInput.value.trim();
-
-    if (message === "") {
-        return;
-    }
-
-    chatMessages.innerHTML += `
-        <div class="user-message">
-            ${escapeHTML(message)}
-        </div>
-    `;
-
-    chatInput.value = "";
-
-    const loadingMessage = document.createElement("div");
-    loadingMessage.className = "ai-message";
-    loadingMessage.textContent = "Thinking...";
-    chatMessages.appendChild(loadingMessage);
-
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-
-    try {
-        const response = await fetch("http://127.0.0.1:8000/api/ask", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-    question: message,
-    paper_context: currentPaper ? JSON.stringify({
-        title: currentPaper.title,
-        authors: currentPaper.authors,
-        topic: currentPaper.topic,
-        source: currentPaper.source,
-        date: currentPaper.date,
-        summary: currentPaper.summary,
-        tags: currentPaper.tags
-    }) : "No paper selected."
-})
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.detail || "AI request failed");
-        }
-
-        loadingMessage.textContent = data.answer;
-        const saveAIButton = document.createElement("button");
-
-saveAIButton.className = "btn btn-sm btn-outline-primary mt-2";
-saveAIButton.textContent = "Save to Research Notes";
-
-saveAIButton.addEventListener("click", function () {
-    researchNotes.push({
-    text: data.answer,
-    type: "ai"
-});
-    saveNotes();
-    displayNotes();
-
-    saveAIButton.textContent = "Saved!";
-    saveAIButton.disabled = true;
-});
-
-loadingMessage.appendChild(saveAIButton);
-
-    } catch (error) {
-    console.error("AI Error:", error);
-
-    loadingMessage.textContent =
-        "The AI service is temporarily busy. Please try again in a moment.";
-}
-
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-
-function escapeHTML(text) {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-sendButton.addEventListener("click", sendMessage);
-fetch("http://127.0.0.1:8000/api/test")
-    .then(response => response.json())
-    .then(data => {
-        console.log("Backend connected:", data);
-    })
-    .catch(error => {
-        console.error("Backend connection failed:", error);
-    });
-
-chatInput.addEventListener("keydown", function(event) {
-    if (event.key === "Enter") {
-        sendMessage();
-    }
-});
-const noteInput = document.getElementById("noteInput");
-const charCount = document.getElementById("charCount");
-
-noteInput.addEventListener("input", function () {
-    charCount.textContent = noteInput.value.length;
-});
-const saveNoteButton = document.getElementById("saveNoteButton");
-const savedNotes = document.getElementById("savedNotes");
-const noteFilter = document.getElementById("noteFilter");
-
-noteFilter.addEventListener("change", displayNotes);
-
-const paperId = currentPaper ? currentPaper.id : "general";
-
-const notesStorageKey = `paperdigest-research-notes-${paperId}`;
-
-let researchNotes = JSON.parse(
-    localStorage.getItem(notesStorageKey) || "[]"
-);
-
-function displayNotes() {
-    savedNotes.innerHTML = "";
-
-    researchNotes
-    .map((note, index) => ({ note, index }))
-    .filter(({ note }) => {
-        const type = typeof note === "string" ? "manual" : note.type;
-        return noteFilter.value === "all" || type === noteFilter.value;
-    })
-    .forEach(({ note, index }) => {
-        const noteTextValue =
-            typeof note === "string" ? note : note.text;
-
-        const noteType =
-            typeof note === "string" ? "manual" : note.type;
-
-        const noteCard = document.createElement("div");
-        noteCard.className = "saved-note";
-
-        const typeLabel = document.createElement("small");
-        typeLabel.className = "text-primary";
-        typeLabel.textContent =
-            noteType === "ai" ? "AI-Generated Note" : "Manual Note";
-
-        const noteText = document.createElement("p");
-        noteText.textContent = noteTextValue;
-
-        const editButton = document.createElement("button");
-        editButton.className = "btn btn-sm btn-outline-primary me-2";
-        editButton.textContent = "Edit";
-
-        editButton.addEventListener("click", function () {
-            noteInput.value = noteTextValue;
-            charCount.textContent = noteTextValue.length;
-
-            researchNotes.splice(index, 1);
-            saveNotes();
-            displayNotes();
-        });
-
-        const deleteButton = document.createElement("button");
-        deleteButton.className = "btn btn-sm btn-outline-danger";
-        deleteButton.textContent = "Delete";
-
-        deleteButton.addEventListener("click", function () {
-            researchNotes.splice(index, 1);
-            saveNotes();
-            displayNotes();
-        });
-
-        noteCard.appendChild(typeLabel);
-        noteCard.appendChild(noteText);
-        noteCard.appendChild(editButton);
-        noteCard.appendChild(deleteButton);
-
-        savedNotes.appendChild(noteCard);
-    });
-}
-
-function saveNotes() {
-    localStorage.setItem(
-        notesStorageKey,
-        JSON.stringify(researchNotes)
-    );
-}
-
-
-saveNoteButton.addEventListener("click", function () {
-    const note = noteInput.value.trim();
-
-    if (note === "") {
-        alert("Please write a note first.");
-        return;
-    }
-
-    researchNotes.push({
-    text: note,
-    type: "manual"
-});
-    saveNotes();
-
-    noteInput.value = "";
-    displayNotes();
-});
-
-displayNotes();
-const clearNotesButton = document.getElementById("clearNotesButton");
-
-clearNotesButton.addEventListener("click", function () {
-    if (confirm("Are you sure you want to delete all notes for this paper?")) {
-        researchNotes = [];
-        saveNotes();
-        displayNotes();
-        noteInput.value = "";
-        charCount.textContent = "0";
-    }
-});
-</script>
-
+    <script type="module" src="js/reader.js"></script>
 </body>
+
 </html>
