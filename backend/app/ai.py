@@ -27,8 +27,8 @@ def get_model_candidates() -> list[str]:
 
 
 def get_client():
-    # A fresh client per request: FastAPI runs sync endpoints in a thread pool,
-    # and the SDK's HTTP client is bound to the thread/event loop that made it.
+    # A fresh client per request: the SDK's HTTP client is closed when its
+    # owning object is garbage collected, so keep it alive for the call.
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         raise AIServiceError("GEMINI_API_KEY is not configured")

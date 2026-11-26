@@ -7,10 +7,10 @@ An AI-powered research reading platform. The feed contains **60 randomly sampled
 Two servers are needed: the API (paper feed + AI) and the static frontend.
 
 ```bash
-# 1. API — uses the .venv in this repo
+# 1. API (Flask) — uses the .venv in this repo
 cp .env.example .env          # then put your real GEMINI_API_KEY in .env
 source .venv/bin/activate
-uvicorn backend.app.main:app --reload --port 8000
+flask --app backend.app.main run --port 8000
 
 # 2. Frontend — in a second terminal, from the project root
 python3 -m http.server 5500
@@ -58,4 +58,4 @@ python3 -m unittest discover -s backend/tests -v   # arXiv parser
 
 ## Data notes
 
-Paper metadata, abstracts and PDF links come from the [arXiv API](https://info.arxiv.org/help/api/index.html) across computational categories (`cs.LG`, `cs.AI`, `cs.CV`, `cs.CL`, `cs.RO`, `cs.NE`, `stat.ML`, `q-fin.CP`). The backend fetches a pool of 300 recent papers and randomly selects 60; the selection is stable for a given day (or pass `?seed=` to reproduce one). arXiv does not send CORS headers, so the browser never calls arXiv directly — the FastAPI backend proxies it. Reading-list state, interests, shared lists, digests and research notes are stored in this browser's LocalStorage.
+Paper metadata, abstracts and PDF links come from the [arXiv API](https://info.arxiv.org/help/api/index.html) across computational categories (`cs.LG`, `cs.AI`, `cs.CV`, `cs.CL`, `cs.RO`, `cs.NE`, `stat.ML`, `q-fin.CP`). The backend fetches a pool of 300 recent papers and randomly selects 60; the selection is stable for a given day (or pass `?seed=` to reproduce one). arXiv does not send CORS headers, so the browser never calls arXiv directly — the Flask backend proxies it. Reading-list state, interests, shared lists, digests and research notes are stored in this browser's LocalStorage.
